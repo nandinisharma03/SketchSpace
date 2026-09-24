@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SketchSpace</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="join">
+    <div class="card">
+      <h1>SketchSpace</h1>
+      <p>Draw together in real time</p>
+      <input id="nameInput" placeholder="Your name" maxlength="20" />
+      <button id="joinBtn">Join room</button>
+      <small id="roomLabel"></small>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <header>
+      <strong>SketchSpace</strong>
+      <div class="tools">
+        <input type="color" id="color" value="#222222" title="Color" />
+        <input type="range" id="size" min="1" max="30" value="4" title="Brush size" />
+        <button id="eraser">Eraser</button>
+        <button id="undo">Undo</button>
+        <button id="clear">Clear</button>
+        <button id="copy">Copy invite link</button>
+      </div>
+      <div id="users"></div>
+    </header>
+    <div id="stage">
+      <canvas id="board" width="1200" height="700"></canvas>
+      <div id="cursors"></div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
