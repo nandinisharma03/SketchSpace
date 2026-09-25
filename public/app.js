@@ -1,9 +1,17 @@
-const socket = io();
+// --- Auth: no token means go to the login page ---
+const token = localStorage.getItem('token');
+const loginUrl = () => 'login.html?next=' + encodeURIComponent(location.pathname + location.search);
+if (!token) location.href = loginUrl();
+
+const socket = io({ auth: { token } });
+socket.on('connect_error', (err) => {
+  if (err.message === 'Unauthorized') {
+    localStorage.removeItem('token');
+    location.href = loginUrl();
+  }
+});
 
 // --- Elements ---
-const joinScreen = document.getElementById('join');
-const appScreen = document.getElementById('app');
-const nameInput = document.getElementById('nameInput');
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const cursorsEl = document.getElementById('cursors');
@@ -18,17 +26,15 @@ if (!roomId) {
   roomId = Math.random().toString(36).slice(2, 8);
   history.replaceState(null, '', `?room=${roomId}`);
 }
-document.getElementById('roomLabel').textContent = `Room: ${roomId}`;
 
-// --- Join ---
-document.getElementById('joinBtn').onclick = join;
-nameInput.addEventListener('keydown', (e) => e.key === 'Enter' && join());
-function join() {
-  const name = nameInput.value.trim() || 'Guest';
-  socket.emit('join-room', { roomId, name });
-  joinScreen.hidden = true;
-  appScreen.hidden = false;
-}
+// Join on every (re)connect so a dropped connection restores the room
+socket.on('connect', () => socket.emit('join-room', { roomId }));
+
+document.getElementById('logout').onclick = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  location.href = 'login.html';
+};
 
 // --- Drawing helpers ---
 function drawSegment(s) {

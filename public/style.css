@@ -16,3 +16,17 @@ canvas { display: block; width: 100%; height: auto; cursor: crosshair; }
 #cursors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .cursor { position: absolute; transform: translate(6px, 6px); font-size: 12px; padding: 2px 6px; border-radius: 6px; color: #fff; white-space: nowrap; transition: left .05s linear, top .05s linear; }
 .cursor::before { content: ''; position: absolute; left: -10px; top: -10px; width: 8px; height: 8px; border-radius: 50%; background: inherit; }
+
+/* ---- Stage 2: login page ---- */
+.center { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.card-form { display: grid; gap: 10px; }
+.card input { padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+.tabs { display: flex; gap: 6px; }
+.tab { flex: 1; background: #e8ebf5; color: #333; }
+.tab:hover { background: #dbe0f2; }
+.tab.active { background: #4363d8; color: #fff; }
+.error { color: #c0392b; font-size: 14px; min-height: 18px; }
+.right { display: flex; gap: 10px; align-items: center; }
+button.ghost { background: transparent; color: #4363d8; border: 1px solid #4363d8; }
+button.ghost:hover { background: #eef1fc; }
+button:disabled { opacity: .6; cursor: not-allowed; }

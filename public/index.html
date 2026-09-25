@@ -7,17 +7,7 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="join">
-    <div class="card">
-      <h1>SketchSpace</h1>
-      <p>Draw together in real time</p>
-      <input id="nameInput" placeholder="Your name" maxlength="20" />
-      <button id="joinBtn">Join room</button>
-      <small id="roomLabel"></small>
-    </div>
-  </div>
-
-  <div id="app" hidden>
+  <div id="app">
     <header>
       <strong>SketchSpace</strong>
       <div class="tools">
@@ -28,7 +18,10 @@
         <button id="clear">Clear</button>
         <button id="copy">Copy invite link</button>
       </div>
-      <div id="users"></div>
+      <div class="right">
+        <div id="users"></div>
+        <button id="logout" class="ghost">Logout</button>
+      </div>
     </header>
     <div id="stage">
       <canvas id="board" width="1200" height="700"></canvas>

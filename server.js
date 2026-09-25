@@ -1,16 +1,37 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const path = require('path');
 const { Server } = require('socket.io');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/auth');
+const { verifyToken } = require('./middleware/auth');
+
+if (!process.env.JWT_SECRET) {
+  console.error('JWT_SECRET missing. Copy .env.example to .env and fill it in.');
+  process.exit(1);
+}
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+app.use(express.json());
+app.use('/api/auth', authRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
-// In-memory state (Stage 3 will move this to MongoDB)
-// rooms: roomId -> { segments: [], users: Map(socketId -> {name, color}) }
+// ---- Socket auth: reject connections without a valid JWT ----
+io.use((socket, next) => {
+  try {
+    const payload = verifyToken(socket.handshake.auth && socket.handshake.auth.token);
+    socket.user = { id: payload.id, name: payload.name };
+    next();
+  } catch {
+    next(new Error('Unauthorized'));
+  }
+});
+
+// In-memory board state (Stage 3 will move this to MongoDB)
 const rooms = new Map();
 const MAX_SEGMENTS = 50000;
 const COLORS = ['#e6194B', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#008080', '#9A6324', '#800000'];
@@ -19,7 +40,6 @@ function getRoom(id) {
   if (!rooms.has(id)) rooms.set(id, { segments: [], users: new Map() });
   return rooms.get(id);
 }
-
 function usersList(room) {
   return [...room.users.entries()].map(([id, u]) => ({ id, name: u.name, color: u.color }));
 }
@@ -27,7 +47,7 @@ function usersList(room) {
 io.on('connection', (socket) => {
   let roomId = null;
 
-  socket.on('join-room', ({ roomId: rid, name }) => {
+  socket.on('join-room', ({ roomId: rid }) => {
     rid = String(rid || '').trim().slice(0, 30);
     if (!rid) return;
     roomId = rid;
@@ -35,9 +55,9 @@ io.on('connection', (socket) => {
 
     const room = getRoom(roomId);
     const color = COLORS[room.users.size % COLORS.length];
-    room.users.set(socket.id, { name: String(name || 'Guest').slice(0, 20), color });
+    // Name now comes from the verified token, not from the client
+    room.users.set(socket.id, { name: socket.user.name, userId: socket.user.id, color });
 
-    // Send existing drawing to the new user only
     socket.emit('init', { segments: room.segments, me: { id: socket.id, color } });
     io.to(roomId).emit('users', usersList(room));
   });
@@ -60,14 +80,12 @@ io.on('connection', (socket) => {
     if (!roomId) return;
     const u = getRoom(roomId).users.get(socket.id);
     if (!u) return;
-    // volatile = OK to drop packets, cursors are high-frequency
     socket.to(roomId).volatile.emit('cursor', { id: socket.id, name: u.name, color: u.color, x, y });
   });
 
   socket.on('undo', () => {
     if (!roomId) return;
     const room = getRoom(roomId);
-    // find the last stroke drawn by THIS user
     for (let i = room.segments.length - 1; i >= 0; i--) {
       if (room.segments[i].userId === socket.id) {
         const lastStroke = room.segments[i].strokeId;
@@ -90,9 +108,11 @@ io.on('connection', (socket) => {
     room.users.delete(socket.id);
     io.to(roomId).emit('cursor-left', socket.id);
     io.to(roomId).emit('users', usersList(room));
-    if (room.users.size === 0) rooms.delete(roomId); // free memory
+    if (room.users.size === 0) rooms.delete(roomId);
   });
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`SketchSpace running at http://localhost:${PORT}`));
+connectDB().then(() => {
+  server.listen(PORT, () => console.log(`SketchSpace running at http://localhost:${PORT}`));
+});

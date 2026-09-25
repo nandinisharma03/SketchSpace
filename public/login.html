@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SketchSpace - Login</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="center">
+    <div class="card">
+      <h1>SketchSpace</h1>
+      <p>Draw together in real time</p>
+      <div class="tabs">
+        <button type="button" id="tabLogin" class="tab active">Login</button>
+        <button type="button" id="tabSignup" class="tab">Sign up</button>
+      </div>
+      <form id="authForm" class="card-form">
+        <input id="name" placeholder="Your name" maxlength="30" hidden />
+        <input id="email" type="email" placeholder="Email" required />
+        <input id="password" type="password" placeholder="Password (min 6 chars)" required />
+        <button type="submit" id="submitBtn">Login</button>
+        <div id="error" class="error"></div>
+      </form>
+    </div>
+  </div>
+  <script src="login.js"></script>
+</body>
+</html>
